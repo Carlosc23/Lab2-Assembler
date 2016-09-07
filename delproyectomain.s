@@ -1,11 +1,8 @@
-//1.Directivas
  .text
  .align 2
  .global main
 main:
-//2.Puntero a la memoria virtual 0x20200000 o 0x3F200000
 	bl GetGpioAddress @solo se llama una vez
-//3.Puertos 15,14,18 de salida
 @GPIO para escritura puerto	19,16,26,20,21
 @LED 1
 	mov r0,#19
@@ -29,7 +26,6 @@ main:
 	bl SetGpioFunction
 	
 	
-//4.Puerto 21 de entrada
 @GPIO para lectura puerto 17,18,27,22,23
 @SUBIR
 	mov r0,#17
@@ -48,136 +44,179 @@ main:
 	mov r1,#0
 	bl SetGpioFunction
 @FAV3
-	mov r0,#23
+@	mov r0,#23
+@	mov r1,#0
+@	bl SetGpioFunction
+	
+	@LED 1
+	mov r0,#19
 	mov r1,#0
-	bl SetGpioFunction
-	
-	
-ciclo:
-//5.r10= contador de boton presionado = 0 
+	bl SetGpio
+@LED 2
+	mov r0,#16
+	mov r1,#0
+	bl SetGpio
+@LED 3
+	mov r0,#26
+	mov r1,#0
+	bl SetGpio
+@LED 4
+	mov r0,#20
+	mov r1,#0
+	bl SetGpio	
+@BOCINA
+	mov r0,#21
+	mov r1,#0
+	bl SetGpio
+
 	mov r10,#0	
-//6.Apagar todos los leds
-bl apagar
+@bl apagar
 	
 revisar:
-//7.¿Puerto 17/18 de entrada estÃ¡ presionado? (GetGpio)
+	
+	
 	mov r0,#17
 	bl GetGpio
-	cmp r0,#0 
-//8. SI -> r10++
+	mov r1,r0
+	cmp r1,#0 
 	addne r10,#1
-	//ver si apacho el de menos
+	bl wait	
+	
 	mov r0,#18
 	bl GetGpio
 	cmp r0,#0
 	subne r10,#1 
+	bl wait
 	
-	//ver si apacho el fav 1
+		
 	mov r0,#27
 	bl GetGpio
 	cmp r0,#0
-	ldr r1,=favorito1
-	ldr r1,[r1]
-	movne r10,r1
+	ldrne r0,=favorito1
+	ldrne r0,[r0]
+	movne r10,r0
+	bl wait
 	
-	//ver si apacho el fav 2
 	mov r0,#22
 	bl GetGpio
 	cmp r0,#0
-	ldr r1,=favorito2
-	ldr r1,[r1]
-	movne r10,r1	
+	ldrne r0,=favorito2
+	ldrne r0,[r0]
+	movne r10,r0
+	bl wait
 	
-	
-	//ver si apacho el fav 3
-	mov r0,#23
-	bl GetGpio
-	cmp r0,#0
-	ldr r1,=favorito3
-	ldr r1,[r1]
-	movne r10,r1	
-	
-//9. si r10 = 1 encender puerto 18
+mov r0,r10
+bl delay
 
-//si r10=1
+	mov r0,#21
+	mov r1,#1
+	bl SetGpio
+mov r0,r10
+bl delay
+	
+	mov r0,#21
+	mov r1,#0
+	bl SetGpio
+	
+	cmp r10,#0
+	addlt r10,#1
+	
+cmp r10,#0
+bleq cero	
+	
 cmp r10,#1
-bl apagar
+bleq uno
 
-bl uno
-//si r10=2
+
 cmp r10,#2
-bl apagar
+bleq dos
 
-bl dos
-//si r10=3
 cmp r10,#3
-bl apagar
+bleq tres
 
-bl tres
-//si r10=4
 cmp r10,#4
-bl apagar
+@bl apagar
+bleq cuatro
 
-bl cuatro
-//si r10=5
+
 cmp r10,#5
-bl apagar
+@bl apagar
+bleq cinco
 
-bl cinco
-//si r10=6
+
 cmp r10,#6
-bl apagar
+@bl apagar
+bleq seis
 
-bl seis
-//si r10=7
+
 cmp r10,#7
-bl apagar
+@bl apagar
+bleq siete
 
-bl siete
-//si r10=8
 cmp r10,#8
-bl apagar
+@bl apagar
+bleq ocho
 
-bl ocho
-//si r10=9
 cmp r10,#9
-bl apagar
+@bl apagar
+bleq nueve
 
-bl nueve
-//si r10=10
 cmp r10,#10
-bl apagar
+@bl apagar
+bleq diez
 
-bl diez
-//si r10=11
 cmp r10,#11
+@bl apagar
+bleq once
 
-bl apagar
-bl once
-//si r10=12
 cmp r10,#12
-bl apagar
-bl doce
-//si r10=13
+@bl apagar
+bleq doce
+
 cmp r10,#13
-bl apagar
-bl trece
-//si r10=14
+@bl apagar
+bleq trece
+
 cmp r10,#14
-bl apagar
-bl catorce
-//si r10=15
+@bl apagar
+bleq catorce
+
 cmp r10,#15
-bl apagar
-bl quince
+@bl apagar
+bleq quince
 	
 	cmp r10,#16
 	moveq r10,#15
 
+fin:
 	b revisar
-apagar:
+wait:
+	mov r0, #0x4000000 @ big number
+sleepLoop:
+	subs r0,#1
+	bne sleepLoop @ loop delay
+	mov pc,lr
+
+delay:
+ mov r7,#0
+	@tomamos nuestra base de 150000*2*ingresado entonces 300000 seria para que tarde 0.001 segundos. lo hice asi por conveniencia. luego se multiplica por lo ingresado para que tarde esa cantidad de milisegundos
+	ldr r1,=delaynum
+	ldr r1,[r1]
+	mov r3,#2
+	mul r0,r3
+	mul r0,r1
+    b compare
+loop1:
+    add r7,#1     //r7++
+compare:
+    cmp r7,r0     //test r7 == r0
+    bne loop1
+
+   mov pc,lr
+
+   cero:
 push {lr}
-@LED 1
+	@LED 1
 	mov r0,#19
 	mov r1,#0
 	bl SetGpio
@@ -193,13 +232,32 @@ push {lr}
 	mov r0,#20
 	mov r1,#0
 	bl SetGpio
-pop{pc}
-
-uno:
+pop {pc}
+   
+   
+   uno:
 push {lr}
+ldr r0,=msj1
+bl puts
 	@LED 1
 	mov r0,#19
-	mov r1,1
+	mov r1,#0
+	bl SetGpio
+@LED 2
+	mov r0,#16
+	mov r1,#0
+	bl SetGpio
+@LED 3
+	mov r0,#26
+	mov r1,#0
+	bl SetGpio
+@LED 4
+	mov r0,#20
+	mov r1,#0
+	bl SetGpio	
+	@LED 1
+	mov r0,#19
+	mov r1,#1
 	bl SetGpio
 @LED 2
 	mov r0,#16
@@ -217,6 +275,24 @@ pop {pc}
 
 dos:
 push {lr}
+ldr r0,=msj2
+bl puts
+	@LED 1
+	mov r0,#19
+	mov r1,#0
+	bl SetGpio
+@LED 2
+	mov r0,#16
+	mov r1,#0
+	bl SetGpio
+@LED 3
+	mov r0,#26
+	mov r1,#0
+	bl SetGpio
+@LED 4
+	mov r0,#20
+	mov r1,#0
+	bl SetGpio	
 	@LED 1
 	mov r0,#19
 	mov r1,#0
@@ -237,6 +313,24 @@ pop {pc}
 
 tres:
 push {lr}
+ldr r0,=msj3
+bl puts
+	@LED 1
+	mov r0,#19
+	mov r1,#0
+	bl SetGpio
+@LED 2
+	mov r0,#16
+	mov r1,#0
+	bl SetGpio
+@LED 3
+	mov r0,#26
+	mov r1,#0
+	bl SetGpio
+@LED 4
+	mov r0,#20
+	mov r1,#0
+	bl SetGpio	
 	@LED 1
 	mov r0,#19
 	mov r1,#1
@@ -257,6 +351,8 @@ pop {pc}
 
 cuatro:
 push {lr}
+ldr r0,=msj4
+bl puts
 	@LED 1
 	mov r0,#19
 	mov r1,#0
@@ -277,6 +373,8 @@ pop {pc}
 
 cinco:
 push {lr}
+ldr r0,=msj5
+bl puts 
 	@LED 1
 	mov r0,#19
 	mov r1,#1
@@ -498,10 +596,15 @@ pop {pc}
 .align 2
 .global myloc
 myloc: .word 0
-favorito1: .word 0 
-favorito2: .word 0 
+favorito1: .word 8 
+favorito2: .word 12 
 favorito3: .word 0 
-
-
+mensaje: .asciz "hola"
+msj1: .asciz "1"
+msj2: .asciz "2"
+msj3: .asciz "3"
+msj4: .asciz"4"
+msj5: .asciz"5"
+delaynum:.word 1500000
 
  .end

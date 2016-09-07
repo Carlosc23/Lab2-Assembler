@@ -134,7 +134,7 @@ GetGpio:
 	push {r5-r8}
 	mov r8,r0
 	
-	ldr r6,myloc
+	ldr r6,=myloc
 	ldr r0,[r6]
 	ldr r5,[r0,#0x34]
 	
